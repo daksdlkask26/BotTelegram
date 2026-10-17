@@ -1,0 +1,15 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Environment / cache
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime data
+*.log
+data/
+*.db
+*.sqlite*
