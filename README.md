@@ -1,76 +1,76 @@
 # BotTele – Telegram Shop Bot
 
-Bot Telegram bán sản phẩm số (tài khoản, key, ...) với ví nội bộ, nạp tiền tự động qua **Sepay** (chuyển khoản ngân hàng VN) và **Binance** (USDT TRC20/BEP20), kho hàng, quản lý đơn và phân quyền admin/subadmin. Hỗ trợ đa ngôn ngữ.
+A Telegram bot for selling digital goods (accounts, keys, etc.) with an internal wallet, automatic top-ups via **Sepay** (Vietnamese bank transfer) and **Binance** (USDT TRC20/BEP20), stock management, order handling, and admin/subadmin roles. Multi-language support included.
 
-## Tính năng
+## Features
 
-- **Người dùng**: xem sản phẩm, chọn số lượng, mua hàng, xem dashboard/thông tin cá nhân, đổi ngôn ngữ.
-- **Nạp tiền**: QR/chuyển khoản ngân hàng VN qua webhook Sepay; nạp crypto USDT (TRC20, BEP20) đối soát qua Binance API; đơn nạp có thời hạn (`ORDER_TTL_SECONDS`).
-- **Quản trị**: thêm/xóa sản phẩm, quản lý kho (`pushItem`, `pullItem`, `updatestock`, ...), xử lý đơn, hoàn tiền, broadcast, khóa/mở khóa user, thống kê.
-- **Phân quyền**: admin (`ADMIN_ID`), subadmin (lưu trong DB), người dùng thường.
-- **Nhắc việc**: mỗi giờ gửi nhắc admin/subadmin các đơn `PENDING` chưa xử lý (có nút xác nhận / hủy / mute).
+- **Users**: browse products, choose quantity, buy, view dashboard/profile, switch language.
+- **Top-ups**: bank transfer via Sepay webhook; USDT (TRC20, BEP20) verified through the Binance API; top-up orders expire after `ORDER_TTL_SECONDS`.
+- **Administration**: add/remove products, manage stock (`pushItem`, `pullItem`, `updatestock`, ...), process orders, refunds, broadcasts, block/unblock users, statistics.
+- **Roles**: admin (`ADMIN_ID`), subadmins (stored in the DB), regular users.
+- **Reminders**: every hour, admins/subadmins are reminded of unprocessed `PENDING` orders (with confirm / cancel / mute buttons).
 
-## Cấu trúc
+## Project structure
 
 ```
-main.py              Khởi tạo bot, đăng ký handler, job nhắc đơn, chạy webhook server
-run.py               Entry point
-config.py            Đọc cấu hình từ .env (pydantic-settings)
-sepay_webhook.py     Flask webhook nhận giao dịch từ Sepay
-look_up.py           Tra cứu giao dịch Binance
-services/binance_api.py  Gọi Binance API (ký HMAC)
-commands/            Lệnh: user, admin, boss; dbconfig.py tạo schema SQLite
-i18n.py, locales.py  Đa ngôn ngữ
-data/database.db     SQLite (tự tạo, không commit)
+main.py                  Bot setup, handler registration, reminder job, webhook server
+run.py                   Entry point
+config.py                Settings loaded from .env (pydantic-settings)
+sepay_webhook.py         Flask webhook receiving Sepay transactions
+look_up.py               Binance transaction lookup
+services/binance_api.py  Binance API client (HMAC-signed)
+commands/                User, admin and boss commands; dbconfig.py creates the SQLite schema
+i18n.py, locales.py      Translations
+data/database.db         SQLite database (auto-created, not committed)
 ```
 
-## Yêu cầu
+## Requirements
 
 - Python 3.10+
-- Bot token từ [@BotFather](https://t.me/BotFather)
-- (Tuỳ chọn) tài khoản Sepay và API key Binance (quyền chỉ đọc)
+- A bot token from [@BotFather](https://t.me/BotFather)
+- (Optional) a Sepay account and a Binance API key (read-only recommended)
 
-## Cài đặt
+## Installation
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirments.txt
-cp .env.example .env     # rồi điền giá trị
+cp .env.example .env     # then fill in the values
 python run.py
 ```
 
-## Cấu hình (`.env`)
+## Configuration (`.env`)
 
-| Biến | Mô tả |
+| Variable | Description |
 |---|---|
-| `BOT_TOKEN` | Token bot Telegram (bắt buộc) |
-| `ADMIN_ID` | Telegram ID của admin chính |
-| `USER_NAME` | Username hỗ trợ hiển thị cho người dùng |
-| `PATH_DB` | Đường dẫn SQLite, mặc định `data/database.db` |
-| `SEPAY_WEBHOOK_KEY` | Khóa xác thực webhook Sepay |
-| `WEBHOOK_PATH` | Đường dẫn webhook, mặc định `/sepay/webhook` |
-| `PORT` | Cổng webhook server, mặc định `5051` |
-| `ORDER_TTL_SECONDS` | Thời hạn đơn nạp, mặc định `900` |
-| `BANK_ACC`, `BANK_CODE`, `BANK_NAME`, `ACC_OWNER` | Thông tin tài khoản ngân hàng nhận tiền |
-| `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `BINANCE_ID` | Thông tin Binance |
-| `TRC20_ADDRESS`, `BEP20_ADDRESS` | Địa chỉ ví nhận USDT |
+| `BOT_TOKEN` | Telegram bot token (required) |
+| `ADMIN_ID` | Telegram ID of the main admin |
+| `USER_NAME` | Support username shown to users |
+| `PATH_DB` | SQLite path, default `data/database.db` |
+| `SEPAY_WEBHOOK_KEY` | Key used to authenticate Sepay webhooks |
+| `WEBHOOK_PATH` | Webhook path, default `/sepay/webhook` |
+| `PORT` | Webhook server port, default `5051` |
+| `ORDER_TTL_SECONDS` | Top-up order lifetime, default `900` |
+| `BANK_ACC`, `BANK_CODE`, `BANK_NAME`, `ACC_OWNER` | Receiving bank account details |
+| `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `BINANCE_ID` | Binance credentials |
+| `TRC20_ADDRESS`, `BEP20_ADDRESS` | Wallet addresses receiving USDT |
 
-> **Bảo mật:** không commit `.env`, database hay log (đã có trong `.gitignore`). Nên dùng API key Binance chỉ có quyền đọc.
+> **Security:** never commit `.env`, the database, or logs (they are already in `.gitignore`). Use a read-only Binance API key.
 
-## Webhook Sepay
+## Sepay webhook
 
-Trỏ webhook của Sepay tới `https://<domain>:<PORT><WEBHOOK_PATH>` (POST) và cấu hình cùng khóa `SEPAY_WEBHOOK_KEY`. Nên đặt sau reverse proxy HTTPS (nginx/caddy).
+Point the Sepay webhook to `https://<domain>:<PORT><WEBHOOK_PATH>` (POST) using the same key as `SEPAY_WEBHOOK_KEY`. Put it behind an HTTPS reverse proxy (nginx/caddy).
 
-## Lệnh chính
+## Main commands
 
-**Người dùng:** `/start`, `/help`, `/dashboard`, `/listproducts`, `/addfund`, `/cancelrecharge`, `/myid`, `/aboutme`, `/language`
+**Users:** `/start`, `/help`, `/dashboard`, `/listproducts`, `/addfund`, `/cancelrecharge`, `/myid`, `/aboutme`, `/language`
 
 **Admin / subadmin:** `/help_admin`, `/help_subadmin`, `/addproduct`, `/removeproduct`, `/pushItem`, `/pullItem`, `/pullItems`, `/updatestock`, `/myStocks`, `/myStock`, `/listorders`, `/users`, `/detailuser`, `/refund`, `/broadcast`, `/block_user`, `/unblock_user`, `/stats`, `/add_admin`, `/remove_admin`, `/subAdmins`
 
-## Chạy trên VPS
+## Running on a VPS
 
-Chạy bằng `systemd`, `supervisor` hoặc `tmux` để bot tự khởi động lại:
+Run it under `systemd`, `supervisor` or `tmux` so it restarts automatically:
 
 ```ini
 [Service]
